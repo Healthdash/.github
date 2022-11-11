@@ -17,8 +17,8 @@ N.B.: The FAILED status might mean that:
 
 ## More Info
 
-* See [Google Groups](https://groups.google.com/g/huaweihealthsyncv1y2022) for Customer Collaboration
-* See [SO Teams](https://stackoverflow.com/c/healthdash) for Developer Collaboration
+* See [Google Groups](https://groups.google.com/g/huaweihealthsyncv1y2022) for Customer Collaboration ( only registered and approved Pro/Premium Customers )
+* See [SO Teams](https://stackoverflow.com/c/healthdash) for Developer Collaboration ( only registered and approved Project Managament and Development team members )
 * See [Wordpress Blog](https://linardsliepins.wordpress.com/) for Coffee-break reading.
 
 ### Even More Info
