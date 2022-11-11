@@ -4,11 +4,13 @@ An profile for GitHub Org
 
 Latest state of Product CI/CD (for Artifact builds):
 
-* Website ( CD ): [![CircleCI](https://circleci.com/gh/HolimaX/React.svg?style=svg&circle-token=1ad83382b085ffc81cd9c161999280cfc11453a3)](https://circleci.com/gh/HolimaX/React)
-* Website API: TBD
-* Platform ( PCD ): [![CircleCI](https://circleci.com/gh/HolimaX/libgopyu/tree/master.svg?style=svg&circle-token=4430e021a16bba1021b4e8d7515db2f906d311c0)](https://circleci.com/gh/HolimaX/libgopyu/tree/master)
-* Custom Apps ( DSV ): [![CircleCI](https://circleci.com/gh/HolimaX/libcontimig.svg?style=svg&circle-token=cb428453a63496a173b977fd897d6307a59c559c)](https://circleci.com/gh/HolimaX/libcontimig)
-* Mobile App: [![CircleCI](https://circleci.com/gh/HolimaX/libhacontimig.svg?style=svg&circle-token=a3445d8d90d41bd2a952128f6409f991bd54e320)](https://circleci.com/gh/HolimaX/libhacontimig)
+| Type | Product CODE/Component Abbriveation | Status |
+|---|---|---|
+| Website | CD | [![CircleCI](https://circleci.com/gh/HolimaX/React.svg?style=svg&circle-token=1ad83382b085ffc81cd9c161999280cfc11453a3)](https://circleci.com/gh/HolimaX/React) |
+| Website API | N/A | TBD |
+| Platform | PCD | [![CircleCI](https://circleci.com/gh/HolimaX/libgopyu/tree/master.svg?style=svg&circle-token=4430e021a16bba1021b4e8d7515db2f906d311c0)](https://circleci.com/gh/HolimaX/libgopyu/tree/master) |
+| Custom App(s) | DSV | [![CircleCI](https://circleci.com/gh/HolimaX/libcontimig.svg?style=svg&circle-token=cb428453a63496a173b977fd897d6307a59c559c)](https://circleci.com/gh/HolimaX/libcontimig) |
+| Mobile App | N/A | [![CircleCI](https://circleci.com/gh/HolimaX/libhacontimig.svg?style=svg&circle-token=a3445d8d90d41bd2a952128f6409f991bd54e320)](https://circleci.com/gh/HolimaX/libhacontimig) |
 
 N.B.: The FAILED status might mean that:
 
