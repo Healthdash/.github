@@ -24,3 +24,7 @@ N.B.: The FAILED status might mean that:
 ### Even More Info
 
 Partnerships are described in [Product Homepage](http://healthdash.lv/partners)
+
+#### Glossary
+
+[SER](https://www.healthdash.lv/SER)
