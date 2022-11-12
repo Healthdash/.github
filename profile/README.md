@@ -21,11 +21,13 @@ N.B.: The FAILED status might mean that:
 
 * See [Google Groups](https://groups.google.com/g/huaweihealthsyncv1y2022) for Customer Collaboration ( only registered and approved Pro/Premium Customers )
 * See [SO Teams](https://stackoverflow.com/c/healthdash) for Developer Collaboration ( only registered and approved Project Managament and Development team members )
+* See [Keybase](keybase://team/healthdash) for Development Documentation ( only registered and approved Project Managament and Development team members )
 * See [Wordpress Blog](https://linardsliepins.wordpress.com/) for Coffee-break reading.
 
 ### Even More Info
 
-Partnerships are described in [Product Homepage](http://healthdash.lv/partners)
+* Partnerships are described in [Product Homepage](http://healthdash.lv/partners)
+* Support is provided via [Public Bug Tracker in BitBucket](https://bitbucket.org/HolimaX/sandboxandroid/issues/new).
 
 #### Glossary
 
