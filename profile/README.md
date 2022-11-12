@@ -21,13 +21,21 @@ N.B.: The FAILED status might mean that:
 
 * See [Google Groups](https://groups.google.com/g/huaweihealthsyncv1y2022) for Customer Collaboration ( only registered and approved Pro/Premium Customers )
 * See [SO Teams](https://stackoverflow.com/c/healthdash) for Developer Collaboration ( only registered and approved Project Managament and Development team members )
-* See [Keybase](keybase://team/healthdash) for Development Documentation ( only registered and approved Project Managament and Development team members )
+* See [Keybase](keybase://team/healthdash) for Development Documentation ( only registered and approved Project Managament, Development team _and Alpha/Beta Tester team_ members )
 * See [Wordpress Blog](https://linardsliepins.wordpress.com/) for Coffee-break reading.
 
 ### Even More Info
 
 * Partnerships are described in [Product Homepage](http://healthdash.lv/partners)
 * Support is provided via [Public Bug Tracker in BitBucket](https://bitbucket.org/HolimaX/sandboxandroid/issues/new).
+
+#### Compliance and Standardization
+
+* [SPDX](https://spdx.github.io/license-list-data)
+* [OpenGraph](https://www.opengraph.io/documentation)
+* [SPA](https://reactjs.org/docs/glossary.html)
+* [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
+* [FIPS](https://discourse.ubuntu.com/t/ubuntu-pro-beta-tutorial/31018)
 
 #### Glossary
 
