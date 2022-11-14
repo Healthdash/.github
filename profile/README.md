@@ -29,13 +29,14 @@ N.B.: The FAILED status might mean that:
 * Partnerships are described in [Product Homepage](http://healthdash.lv/partners)
 * Support is provided via [Public Bug Tracker in BitBucket](https://bitbucket.org/HolimaX/sandboxandroid/issues/new).
 
-#### Compliance and Standardization
+#### Compliance , Standardization and Practices
 
 * [SPDX](https://spdx.github.io/license-list-data)
 * [OpenGraph](https://www.opengraph.io/documentation)
 * [SPA](https://reactjs.org/docs/glossary.html)
 * [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
 * [FIPS](https://discourse.ubuntu.com/t/ubuntu-pro-beta-tutorial/31018)
+* [Custom Branching](https://www.bing.com/search?q=custom+git+branchng&cvid=bf96b3ecf09a46129340271dd3cb7e02&aqs=edge..69i57.10071j0j4&FORM=ANAB01&PC=EDGEDB)
 
 #### Glossary
 
