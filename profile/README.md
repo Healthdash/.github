@@ -33,6 +33,7 @@ N.B.: The FAILED status might mean that:
 
 * [SPDX](https://spdx.github.io/license-list-data)
 * [OpenGraph](https://www.opengraph.io/documentation)
+* [AMP](https://www.amp.dev)
 * [SPA](https://reactjs.org/docs/glossary.html)
 * [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
 * [FIPS , CIS , DISA-STIG , Common Criteria](https://ubuntu.com/security/certifications/docs)
