@@ -31,13 +31,16 @@ N.B.: The FAILED status might mean that:
 
 #### Compliance , Standardization and Practices
 
+* [camelCase](https://en.wikipedia.org/wiki/Camel_case)
 * [SPDX](https://spdx.github.io/license-list-data)
+* [SemVer 2.0](https://semver.org/)
 * [OpenGraph](https://www.opengraph.io/documentation)
 * [AMP](https://www.amp.dev)
 * [SPA](https://reactjs.org/docs/glossary.html)
 * [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
 * [FIPS , CIS , DISA-STIG , Common Criteria](https://ubuntu.com/security/certifications/docs)
 * [Custom Branching](https://www.bing.com/search?q=custom+git+branchng&cvid=bf96b3ecf09a46129340271dd3cb7e02&aqs=edge..69i57.10071j0j4&FORM=ANAB01&PC=EDGEDB)
+* [UML 2.5.x](https://www.uml-diagrams.org/uml-25-diagrams.html)
 
 #### Glossary
 
