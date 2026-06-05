@@ -1,0 +1,265 @@
+name: Crash Issue Housekeeping
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to check (optional, checks all if empty)'
+        required: false
+
+env:
+  MASTER_ISSUE: 53
+  CRASHLYTICS_LABEL: 'crashlytics-healthsyncandroidapp'
+  REPORT_FILE: 'CRASH_CONSOLIDATION_REPORT.md'
+
+jobs:
+  check-and-consolidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get newly created issue details
+        id: new_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = context.payload.issue?.number || ${{ github.event.inputs.issue_number }};
+            
+            if (!issueNumber) {
+              core.setFailed('No issue number found');
+              return;
+            }
+            
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber
+            });
+            
+            const hasLabel = issue.data.labels.some(l => l.name === process.env.CRASHLYTICS_LABEL);
+            
+            core.setOutput('issue_number', issueNumber);
+            core.setOutput('title', issue.data.title);
+            core.setOutput('body', issue.data.body);
+            core.setOutput('is_crashlytics', hasLabel);
+            
+            return issue.data;
+
+      - name: Extract crash information
+        id: extract_crash
+        if: steps.new_issue.outputs.is_crashlytics == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `${{ steps.new_issue.outputs.body }}`;
+            const title = `${{ steps.new_issue.outputs.title }}`;
+            
+            // Extract crash type from title
+            const crashType = title.replace(/\[.*?\]/g, '').trim();
+            
+            // Extract app version from body
+            const versionMatch = body.match(/appVersion\s*\|\s*([\w\.-]+)/);
+            const appVersion = versionMatch ? versionMatch[1] : 'unknown';
+            
+            // Extract app ID from body
+            const idMatch = body.match(/appId\s*\|\s*([^\n]+)/);
+            const appId = idMatch ? idMatch[1].trim() : 'unknown';
+            
+            // Extract crash ID
+            const crashIdMatch = body.match(/id\s*\|\s*([a-f0-9]+)/);
+            const crashId = crashIdMatch ? crashIdMatch[1] : 'unknown';
+            
+            core.setOutput('crash_type', crashType);
+            core.setOutput('app_version', appVersion);
+            core.setOutput('app_id', appId);
+            core.setOutput('crash_id', crashId);
+
+      - name: Check for duplicates in master issue
+        id: check_duplicates
+        if: steps.new_issue.outputs.is_crashlytics == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const masterIssueNum = process.env.MASTER_ISSUE;
+            const newCrashType = `${{ steps.extract_crash.outputs.crash_type }}`;
+            const newAppVersion = `${{ steps.extract_crash.outputs.app_version }}`;
+            const newCrashId = `${{ steps.extract_crash.outputs.crash_id }}`;
+            
+            const masterIssue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: masterIssueNum
+            });
+            
+            const masterBody = masterIssue.data.body;
+            
+            // Check if crash type exists
+            const crashTypeExists = masterBody.includes(newCrashType);
+            
+            // Find related issues by crash type or crash ID
+            const issuesResponse = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: process.env.CRASHLYTICS_LABEL,
+              state: 'open',
+              per_page: 100
+            });
+            
+            let duplicateIssue = null;
+            let relatedIssues = [];
+            
+            for (const issue of issuesResponse.data) {
+              if (issue.number == ${{ steps.new_issue.outputs.issue_number }}) continue;
+              
+              const issueBody = issue.body;
+              const issueCrashType = issue.title.replace(/\[.*?\]/g, '').trim();
+              
+              // Check for exact crash type match
+              if (issueCrashType === newCrashType) {
+                relatedIssues.push(issue.number);
+                
+                // Check if same crash ID (exact duplicate)
+                if (issueBody.includes(newCrashId)) {
+                  duplicateIssue = issue.number;
+                  break;
+                }
+              }
+            }
+            
+            core.setOutput('crash_type_exists', crashTypeExists);
+            core.setOutput('duplicate_issue', duplicateIssue || 'none');
+            core.setOutput('related_issues', JSON.stringify(relatedIssues));
+            
+            core.info(`Crash Type: ${newCrashType}`);
+            core.info(`App Version: ${newAppVersion}`);
+            core.info(`Crash ID: ${newCrashId}`);
+            core.info(`Duplicate Found: ${duplicateIssue || 'none'}`);
+            core.info(`Related Issues: ${relatedIssues.join(', ')}`);
+
+      - name: Close duplicate issue
+        if: steps.check_duplicates.outputs.duplicate_issue != 'none' && steps.new_issue.outputs.is_crashlytics == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const newIssueNum = ${{ steps.new_issue.outputs.issue_number }};
+            const duplicateNum = ${{ steps.check_duplicates.outputs.duplicate_issue }};
+            const crashType = `${{ steps.extract_crash.outputs.crash_type }}`;
+            
+            // Add duplicate label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: newIssueNum,
+              labels: ['duplicate']
+            });
+            
+            // Comment on new issue
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: newIssueNum,
+              body: `🔍 **Duplicate Detected**\n\nThis issue is a duplicate of #${duplicateNum}. The primary issue contains the latest investigation and status for this crash type: **${crashType}**.\n\nPlease refer to #${duplicateNum} and the [Master Tracker #${process.env.MASTER_ISSUE}](https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${process.env.MASTER_ISSUE}) for consolidated tracking.\n\n---\n*This comment was auto-generated by the Crash Issue Housekeeping workflow.*`
+            });
+            
+            // Close the new issue
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: newIssueNum,
+              state: 'closed'
+            });
+            
+            core.info(`Closed issue #${newIssueNum} as duplicate of #${duplicateNum}`);
+
+      - name: Update master issue
+        if: steps.new_issue.outputs.is_crashlytics == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const masterIssueNum = process.env.MASTER_ISSUE;
+            const newIssueNum = ${{ steps.new_issue.outputs.issue_number }};
+            const crashType = `${{ steps.extract_crash.outputs.crash_type }}`;
+            const appVersion = `${{ steps.extract_crash.outputs.app_version }}`;
+            const isDuplicate = `${{ steps.check_duplicates.outputs.duplicate_issue }}` !== 'none';
+            
+            let comment = '';
+            
+            if (isDuplicate) {
+              comment = `🔄 **Issue Auto-Closed as Duplicate**\n\n- **New Issue:** #${newIssueNum}\n- **Crash Type:** ${crashType}\n- **App Version:** ${appVersion}\n- **Status:** Closed and consolidated\n\nThe duplicate has been closed with appropriate references to the primary issue.\n\n*Auto-processed on ${new Date().toISOString()}*`;
+            } else {
+              comment = `✨ **New Crash Issue Detected**\n\n- **Issue:** #${newIssueNum}\n- **Crash Type:** ${crashType}\n- **App Version:** ${appVersion}\n- **Status:** New (investigate for duplicates)\n\nPlease verify if this should be added as a new primary issue or consolidated with an existing group.\n\n*Detected on ${new Date().toISOString()}*`;
+            }
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: masterIssueNum,
+              body: comment
+            });
+            
+            core.info(`Updated master issue #${masterIssueNum} with new activity`);
+
+      - name: Update consolidation report
+        if: steps.new_issue.outputs.is_crashlytics == 'true' && steps.check_duplicates.outputs.duplicate_issue == 'none'
+        run: |
+          CRASH_TYPE="${{ steps.extract_crash.outputs.crash_type }}"
+          APP_VERSION="${{ steps.extract_crash.outputs.app_version }}"
+          APP_ID="${{ steps.extract_crash.outputs.app_id }}"
+          NEW_ISSUE_NUM="${{ steps.new_issue.outputs.issue_number }}"
+          
+          if [ -f "${{ env.REPORT_FILE }}" ]; then
+            # Add note about new issue to report
+            TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            
+            if ! grep -q "## Latest Updates" "${{ env.REPORT_FILE }}"; then
+              echo "" >> "${{ env.REPORT_FILE }}"
+              echo "## Latest Updates" >> "${{ env.REPORT_FILE }}"
+            fi
+            
+            echo "- **${TIMESTAMP}:** New issue #${NEW_ISSUE_NUM} detected for crash type: ${CRASH_TYPE} (${APP_VERSION})" >> "${{ env.REPORT_FILE }}"
+          fi
+
+      - name: Commit report changes
+        if: steps.new_issue.outputs.is_crashlytics == 'true' && steps.check_duplicates.outputs.duplicate_issue == 'none'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          if [ -n "$(git status --porcelain)" ]; then
+            git add "${{ env.REPORT_FILE }}"
+            git commit -m "chore: update crash consolidation report with new issue #${{ steps.new_issue.outputs.issue_number }}"
+            git push origin add/crash-housekeeping-workflow
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Create summary
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const isCrashlytics = `${{ steps.new_issue.outputs.is_crashlytics }}` === 'true';
+            
+            if (!isCrashlytics) {
+              core.notice('Issue does not have crashlytics label, skipping');
+              return;
+            }
+            
+            const isDuplicate = `${{ steps.check_duplicates.outputs.duplicate_issue }}` !== 'none';
+            const crashType = `${{ steps.extract_crash.outputs.crash_type }}`;
+            const appVersion = `${{ steps.extract_crash.outputs.app_version }}`;
+            
+            let summary = `## Crash Issue Housekeeping Summary\n\n`;
+            summary += `- **Issue:** #${{ steps.new_issue.outputs.issue_number }}\n`;
+            summary += `- **Crash Type:** ${crashType}\n`;
+            summary += `- **App Version:** ${appVersion}\n`;
+            summary += `- **Status:** ${isDuplicate ? '✅ Closed as Duplicate' : '⚠️ New Issue'}\n`;
+            
+            if (isDuplicate) {
+              summary += `- **Primary Issue:** #${{ steps.check_duplicates.outputs.duplicate_issue }}\n`;
+            }
+            
+            core.summary.addRaw(summary);
