@@ -42,7 +42,7 @@ jobs:
 
           core.setOutput('issues', JSON.stringify(issues.data));
 
-    - name: Process each crashlytics issue
+    - name: Process issues in batches with rate-limit protection
       env:
         ISSUES_JSON: ${{ steps.list.outputs.issues }}
       uses: actions/github-script@v7
@@ -50,23 +50,81 @@ jobs:
         script: |
           const issues = JSON.parse(process.env.ISSUES_JSON || "[]");
 
-          if (!Array.isArray(issues)) {
-            core.setFailed("Bulk scan: issues JSON is not an array");
-            return;
+          const BATCH_SIZE = 20;
+          const SLEEP_MS = 5000; // 5 seconds between batches
+          const MAX_RETRIES = 5;
+
+          function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
           }
 
-          for (const issue of issues) {
-            core.info(`Would process crash issue #${issue.number}`);
-            // Here you can dispatch your single-issue workflow
-            // or call a reusable workflow
+          async function safeDispatch(issueNumber) {
+            let attempt = 0;
+
+            while (attempt < MAX_RETRIES) {
+              try {
+                await github.rest.actions.createWorkflowDispatch({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  workflow_id: "crash-housekeeping.yml", // <-- your workflow filename
+                  ref: "main",                           // <-- your branch
+                  inputs: {
+                    issue_number: issueNumber.toString()
+                  }
+                });
+
+                core.info(`Dispatched workflow for issue #${issueNumber}`);
+                return;
+
+              } catch (error) {
+                attempt++;
+
+                // Rate limit protection
+                if (error.status === 403 || error.status === 429) {
+                  const wait = 5000 * attempt;
+                  core.warning(`Rate limit hit. Waiting ${wait}ms before retry ${attempt}/${MAX_RETRIES}`);
+                  await sleep(wait);
+                  continue;
+                }
+
+                // Other errors → retry with backoff
+                core.warning(`Error dispatching #${issueNumber}: ${error.message}. Retrying...`);
+                await sleep(2000 * attempt);
+              }
+            }
+
+            core.error(`Failed to dispatch workflow for issue #${issueNumber} after ${MAX_RETRIES} retries.`);
+          }
+
+          // Split into batches
+          const batches = [];
+          for (let i = 0; i < issues.length; i += BATCH_SIZE) {
+            batches.push(issues.slice(i, i + BATCH_SIZE));
+          }
+
+          core.info(`Total crashlytics issues: ${issues.length}`);
+          core.info(`Processing in ${batches.length} batches of ${BATCH_SIZE}`);
+
+          // Process each batch with sleep between them
+          for (let i = 0; i < batches.length; i++) {
+            const batch = batches[i];
+            core.info(`--- Batch ${i + 1}/${batches.length} ---`);
+
+            for (const issue of batch) {
+              await safeDispatch(issue.number);
+            }
+
+            if (i < batches.length - 1) {
+              core.info(`Sleeping ${SLEEP_MS}ms before next batch...`);
+              await sleep(SLEEP_MS);
+            }
           }
 
     - name: Summary
       uses: actions/github-script@v7
       with:
         script: |
-          core.summary.addRaw("Bulk scan completed. All crashlytics issues listed.");
-
+          core.summary.addRaw("Bulk scan completed with rate-limit protection and automatic dispatching.");
 
   ###########################################################################
   # 2. SINGLE ISSUE MODE (issues event OR workflow_dispatch WITH issue_number)
