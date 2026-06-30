@@ -27,8 +27,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: List all crashlytics issues
-      id: list
+    - name: Fetch all crashlytics issues
+      id: fetch
       uses: actions/github-script@v7
       with:
         script: |
@@ -40,91 +40,79 @@ jobs:
             per_page: 100
           });
 
-          core.setOutput('issues', JSON.stringify(issues.data));
+          const fs = require('fs');
+          fs.writeFileSync('issues.json', JSON.stringify(issues.data, null, 2));
 
-    - name: Process issues in batches with rate-limit protection
-      env:
-        ISSUES_JSON: ${{ steps.list.outputs.issues }}
+          core.info(`Saved ${issues.data.length} issues to issues.json`);
+
+    - name: Split issues into batch files
+      run: |
+        mkdir batches
+        jq -c '.[]' issues.json | split -l 20 - batches/batch_
+
+    - name: Process each batch file
       uses: actions/github-script@v7
       with:
         script: |
-          const issues = JSON.parse(process.env.ISSUES_JSON || "[]");
+          const fs = require('fs');
+          const path = require('path');
 
-          const BATCH_SIZE = 20;
-          const SLEEP_MS = 5000; // 5 seconds between batches
-          const MAX_RETRIES = 5;
+          const BATCH_DIR = 'batches';
+          const files = fs.readdirSync(BATCH_DIR);
 
-          function sleep(ms) {
+          async function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
           }
 
           async function safeDispatch(issueNumber) {
             let attempt = 0;
+            const MAX_RETRIES = 5;
 
             while (attempt < MAX_RETRIES) {
               try {
                 await github.rest.actions.createWorkflowDispatch({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  workflow_id: "crash-housekeeping.yml", // <-- your workflow filename
-                  ref: "main",                           // <-- your branch
-                  inputs: {
-                    issue_number: issueNumber.toString()
-                  }
+                  workflow_id: "crash-housekeeping.yml",
+                  ref: "main",
+                  inputs: { issue_number: issueNumber.toString() }
                 });
 
-                core.info(`Dispatched workflow for issue #${issueNumber}`);
+                core.info(`Dispatched #${issueNumber}`);
                 return;
 
               } catch (error) {
                 attempt++;
-
-                // Rate limit protection
-                if (error.status === 403 || error.status === 429) {
-                  const wait = 5000 * attempt;
-                  core.warning(`Rate limit hit. Waiting ${wait}ms before retry ${attempt}/${MAX_RETRIES}`);
-                  await sleep(wait);
-                  continue;
-                }
-
-                // Other errors → retry with backoff
-                core.warning(`Error dispatching #${issueNumber}: ${error.message}. Retrying...`);
-                await sleep(2000 * attempt);
+                const wait = 5000 * attempt;
+                core.warning(`Error dispatching #${issueNumber}: ${error.message}. Waiting ${wait}ms`);
+                await sleep(wait);
               }
             }
 
-            core.error(`Failed to dispatch workflow for issue #${issueNumber} after ${MAX_RETRIES} retries.`);
+            core.error(`Failed to dispatch #${issueNumber} after retries`);
           }
 
-          // Split into batches
-          const batches = [];
-          for (let i = 0; i < issues.length; i += BATCH_SIZE) {
-            batches.push(issues.slice(i, i + BATCH_SIZE));
-          }
+          for (const file of files) {
+            const batchPath = path.join(BATCH_DIR, file);
+            const lines = fs.readFileSync(batchPath, 'utf8').trim().split('\n');
 
-          core.info(`Total crashlytics issues: ${issues.length}`);
-          core.info(`Processing in ${batches.length} batches of ${BATCH_SIZE}`);
+            core.info(`Processing batch file: ${file} (${lines.length} issues)`);
 
-          // Process each batch with sleep between them
-          for (let i = 0; i < batches.length; i++) {
-            const batch = batches[i];
-            core.info(`--- Batch ${i + 1}/${batches.length} ---`);
-
-            for (const issue of batch) {
+            for (const line of lines) {
+              const issue = JSON.parse(line);
               await safeDispatch(issue.number);
             }
 
-            if (i < batches.length - 1) {
-              core.info(`Sleeping ${SLEEP_MS}ms before next batch...`);
-              await sleep(SLEEP_MS);
-            }
+            core.info(`Sleeping 5s before next batch...`);
+            await sleep(5000);
           }
 
     - name: Summary
       uses: actions/github-script@v7
       with:
         script: |
-          core.summary.addRaw("Bulk scan completed with rate-limit protection and automatic dispatching.");
+          core.summary.addRaw("Bulk scan completed using file-based batching with rate-limit protection.");
+
 
   ###########################################################################
   # 2. SINGLE ISSUE MODE (issues event OR workflow_dispatch WITH issue_number)
