@@ -1,48 +1,57 @@
-# .github
+# Healthdash GitHub Organization profile
 
-An profile for GitHub Org
+This repository contains organization-level information and links to the HealthDash ecosystem. The file is intended as the GitHub org profile README (displayed under the `.github/profile` directory).
 
-Latest state of Product CI/CD (for Artifact builds):
+## Homepage
 
-| Type | Product CODE/Component Abbriveation | Feature-Set Brand Name(s) | Status |
-|---|---|---|---|
-| Website | CD | Cloud Dashboard, SystemDash | [![CircleCI](https://circleci.com/gh/HolimaX/React.svg?style=svg&circle-token=1ad83382b085ffc81cd9c161999280cfc11453a3)](https://circleci.com/gh/HolimaX/React) |
-| Website API | N/A | N/A | TBD |
-| Platform | PCD | Personalized Cloud Dashboard , HealthDash | [![CircleCI](https://circleci.com/gh/HolimaX/libgopyu/tree/master.svg?style=svg&circle-token=4430e021a16bba1021b4e8d7515db2f906d311c0)](https://circleci.com/gh/HolimaX/libgopyu) |
-| Custom App(s) | DSV | Data Sorce Visualizer | [![CircleCI](https://circleci.com/gh/HolimaX/libcontimig.svg?style=svg&circle-token=cb428453a63496a173b977fd897d6307a59c559c)](https://circleci.com/gh/HolimaX/libcontimig) |
-| Mobile App | N/A | HealthSync | [![CircleCI](https://circleci.com/gh/HolimaX/libhacontimig.svg?style=svg&circle-token=a3445d8d90d41bd2a952128f6409f991bd54e320)](https://circleci.com/gh/HolimaX/libhacontimig) |
+- Official product site: https://www.healthdash.lv
+- Personalized Cloud Dashboard (PCD): https://clouddashboard.healthdash.com
 
-N.B.: The FAILED status might mean that:
+## Active repositories (summary)
 
-- *Artifact is produced*, but some tests are conditionally failed/skipped and errocode is not ignored.
-- Paid 3rd party services are not yet updated actual billing status and thus blocking some services.
+- CloudDash-Frontend-ReactJS — Frontend for the Personalized Cloud Dashboard (React). https://github.com/Healthdash/CloudDash-Frontend-ReactJS
+- CloudDash-Frontend-JavaAndroid — Mobile application (Android). https://github.com/Healthdash/CloudDash-Frontend-JavaAndroid
+- CloudDash-Frontend-GoLangComponents — Go-based CLI / tools used by the dashboard. https://github.com/Healthdash/CloudDash-Frontend-GoLangComponents
+- CloudDash-Frontend-PythonComponents — Python/Flask microservices and extensions. https://github.com/Healthdash/CloudDash-Frontend-PythonComponents
+- CloudDash-Backend-ReactJS-API — Backend API for the dashboard. https://github.com/Healthdash/CloudDash-Backend-ReactJS-API
+- android-oauth-client — Android OAuth helper library (public fork). https://github.com/Healthdash/android-oauth-client
+- PizzaDelivery — Example Android app. https://github.com/Healthdash/PizzaDelivery
+- demo-repository — Demo / onboarding repository. https://github.com/Healthdash/demo-repository
+- .github — Organization community settings and this profile. https://github.com/Healthdash/.github
 
-## More Info
+Note: some repositories are private — open an issue or contact a maintainer if you need access.
 
-* See [Google Groups](https://groups.google.com/g/huaweihealthsyncv1y2022) for Customer Collaboration ( only registered and approved Pro/Premium Customers )
-* See [SO Teams](https://stackoverflow.com/c/healthdash) for Developer Collaboration ( only registered and approved Project Managament and Development team members )
-* See [Keybase](keybase://team/healthdash) for Development Documentation ( only registered and approved Project Managament, Development team _and Alpha/Beta Tester team_ members )
-* See [Wordpress Blog](https://linardsliepins.wordpress.com/) for Coffee-break reading.
+## Where to get help / collaborate
 
-### Even More Info
+- Open an issue on the repository that best matches your report or feature request (example: https://github.com/Healthdash/CloudDash-Backend-ReactJS-API/issues).
+- Use GitHub Discussions where enabled in a repository for broader design and collaboration conversations.
+- For internal/professional support, use the organization-managed channels (Slack/Teams/email) — maintainers will provide access details on request.
 
-* Partnerships are described in [Product Homepage](http://healthdash.lv/partners)
-* Support is provided via [Public Bug Tracker in BitBucket](https://bitbucket.org/HolimaX/sandboxandroid/issues/new).
+## CI / Build status
 
-#### Compliance , Standardization and Practices
+CI badges and service tokens were removed from this profile to avoid exposing stale tokens and to prevent broken badges. See each repository's README for the current CI status and build badges.
 
-* [camelCase](https://en.wikipedia.org/wiki/Camel_case)
-* [SPDX](https://spdx.github.io/license-list-data)
-* [SemVer 2.0](https://semver.org/)
-* [OpenGraph](https://www.opengraph.io/documentation)
-* [AMP](https://www.amp.dev)
-* [SPA](https://reactjs.org/docs/glossary.html)
-* [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
-* [FIPS , CIS , DISA-STIG , Common Criteria](https://ubuntu.com/security/certifications/docs)
-* [CCPA](https://www.oag.ca.gov/privacy/ccpa) , [GDPR](https://gdpr.eu/what-is-gdpr/)
-* [Custom Branching](https://www.bing.com/search?q=custom+git+branchng&cvid=bf96b3ecf09a46129340271dd3cb7e02&aqs=edge..69i57.10071j0j4&FORM=ANAB01&PC=EDGEDB)
-* [UML 2.5.x](https://www.uml-diagrams.org/uml-25-diagrams.html)
+## Compliance, standards and practices
 
-#### Glossary
+- camelCase: https://en.wikipedia.org/wiki/Camel_case
+- SPDX license list: https://spdx.github.io/license-list-data
+- Semantic Versioning: https://semver.org/
+- OpenGraph: https://www.opengraph.io/documentation
+- AMP: https://www.amp.dev
+- SPA (React glossary): https://reactjs.org/docs/glossary.html
+- PWA: https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps
+- Security certifications guidance: https://ubuntu.com/security/certifications/docs
+- Privacy regulations: CCPA https://www.oag.ca.gov/privacy/ccpa, GDPR https://gdpr.eu/what-is-gdpr/
+- UML 2.5: https://www.uml-diagrams.org/uml-25-diagrams.html
 
-[SER](https://www.healthdash.lv/SER)
+## Additional links
+
+- Product partners / homepage partners: https://www.healthdash.lv/partners
+
+## Glossary
+
+- SER: https://www.healthdash.lv/SER
+
+---
+
+(Updated: 2026-09-07) — Fixed links and added current repository overview. If you want specific CI badges, status entries, or more detail (owners, contacts, or migration notes), tell me which repos to update and I'll add them.
