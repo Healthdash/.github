@@ -53,23 +53,6 @@ Updated: 2026-09-07
     - [![Last commit](https://img.shields.io/github/last-commit/Healthdash/CloudDash-Frontend-PythonComponents)](https://github.com/Healthdash/CloudDash-Frontend-PythonComponents/commits)
     - [![Open issues](https://img.shields.io/github/issues/Healthdash/CloudDash-Frontend-PythonComponents)](https://github.com/Healthdash/CloudDash-Frontend-PythonComponents/issues)
 
-- android-oauth-client
-  - Produces: Android library artifacts (AAR/JAR) and source releases.
-  - Distributed: Maven Central (where applicable) and GitHub Releases.
-  - Tokenless repo badges (example):
-    - [![Release](https://img.shields.io/github/v/release/Healthdash/android-oauth-client?label=release)](https://github.com/Healthdash/android-oauth-client/releases)
-    - [![Last commit](https://img.shields.io/github/last-commit/Healthdash/android-oauth-client)](https://github.com/Healthdash/android-oauth-client/commits)
-    - [![Open issues](https://img.shields.io/github/issues/Healthdash/android-oauth-client)](https://github.com/Healthdash/android-oauth-client/issues)
-
-- PizzaDelivery
-  - Produces: example Android app and sample source used for demos and testing.
-
-- demo-repository
-  - Produces: demo content and onboarding materials.
-
-- .github
-  - Produces: organization-level configuration and this profile README.
-
 Note: exact artifact locations (S3 bucket paths, private Docker registry endpoints, signed APK URLs) are intentionally NOT listed here to avoid exposing sensitive infrastructure details. If you want exact internal URLs added, provide them through a secure channel and confirm they are safe to publish in this README.
 
 ## Communication & Collaboration channels (restored)
