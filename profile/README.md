@@ -1,35 +1,85 @@
 # Healthdash GitHub Organization profile
 
-This repository contains organization-level information and links to the HealthDash ecosystem. The file is intended as the GitHub org profile README (displayed under the `.github/profile` directory).
+This repository contains organization-level information and links to the HealthDash ecosystem. This file is the GitHub org profile README (displayed from `.github/profile/README.md`).
 
-## Homepage
+Updated: 2026-09-07
+
+## Homepage & Distribution
 
 - Official product site: https://www.healthdash.lv
-- Personalized Cloud Dashboard (PCD): https://clouddashboard.healthdash.com
+- Personalized Cloud Dashboard (PCD) (web UI): https://clouddashboard.healthdash.com
+- Mobile app distribution: Google Play Store (see CloudDash-Frontend-JavaAndroid repository)
+- CI/CD artifacts and releases: see each repository's Releases page and README for published artifacts (Docker images, static build artifacts, APK/AAB, CLI binaries).
 
-## Active repositories (summary)
+## What each repository produces (artifacts and distribution channels)
 
-- CloudDash-Frontend-ReactJS — Frontend for the Personalized Cloud Dashboard (React). https://github.com/Healthdash/CloudDash-Frontend-ReactJS
-- CloudDash-Frontend-JavaAndroid — Mobile application (Android). https://github.com/Healthdash/CloudDash-Frontend-JavaAndroid
-- CloudDash-Frontend-GoLangComponents — Go-based CLI / tools used by the dashboard. https://github.com/Healthdash/CloudDash-Frontend-GoLangComponents
-- CloudDash-Frontend-PythonComponents — Python/Flask microservices and extensions. https://github.com/Healthdash/CloudDash-Frontend-PythonComponents
-- CloudDash-Backend-ReactJS-API — Backend API for the dashboard. https://github.com/Healthdash/CloudDash-Backend-ReactJS-API
-- android-oauth-client — Android OAuth helper library (public fork). https://github.com/Healthdash/android-oauth-client
-- PizzaDelivery — Example Android app. https://github.com/Healthdash/PizzaDelivery
-- demo-repository — Demo / onboarding repository. https://github.com/Healthdash/demo-repository
-- .github — Organization community settings and this profile. https://github.com/Healthdash/.github
+- CloudDash-Frontend-ReactJS
+  - Produces: static web application build (HTML, JS, CSS, assets) packaged by the frontend build pipeline.
+  - Distributed: served from clouddashboard.healthdash.com and deployed to the production hosting environment (see repo README for deployment details).
 
-Note: some repositories are private — open an issue or contact a maintainer if you need access.
+- CloudDash-Backend-ReactJS-API
+  - Produces: backend service releases (Node.js artifacts) and Docker images used by staging/production.
+  - Distributed: Docker images and GitHub Releases; used by the PCD deployment pipeline.
 
-## Where to get help / collaborate
+- CloudDash-Frontend-JavaAndroid
+  - Produces: Android application packages (APK / AAB) and release builds.
+  - Distributed: Google Play Store (public/private tracks); CI produces signed artifacts for release.
 
-- Open an issue on the repository that best matches your report or feature request (example: https://github.com/Healthdash/CloudDash-Backend-ReactJS-API/issues).
-- Use GitHub Discussions where enabled in a repository for broader design and collaboration conversations.
-- For internal/professional support, use the organization-managed channels (Slack/Teams/email) — maintainers will provide access details on request.
+- CloudDash-Frontend-GoLangComponents
+  - Produces: Go-based CLI tools and static binaries used in CI and admin tooling.
+  - Distributed: release binaries attached to GitHub Releases and internal tooling registries.
 
-## CI / Build status
+- CloudDash-Frontend-PythonComponents
+  - Produces: Python/Flask microservice packages and Docker images for optional extension services (PCD apps).
+  - Distributed: Docker images, PyPI/internal package registry (when applicable), and GitHub Releases.
 
-CI badges and service tokens were removed from this profile to avoid exposing stale tokens and to prevent broken badges. See each repository's README for the current CI status and build badges.
+- android-oauth-client
+  - Produces: Android library artifacts (AAR/JAR) and source releases.
+  - Distributed: Maven/Central or GitHub Releases where applicable.
+
+- PizzaDelivery
+  - Produces: example Android app and sample source used for demos and testing.
+  - Distributed: sample artifacts via Releases.
+
+- demo-repository
+  - Produces: demo content and onboarding materials.
+
+- .github
+  - Produces: organization-level configuration and this profile README.
+
+Note: exact artifact formats and distribution targets are maintained in each repository's README. If you need a specific artifact location (for CI, S3 bucket paths, Docker registry, or Play Store links) tell me which repo and I can add the exact URLs and access instructions.
+
+## Communication & Collaboration channels (restored)
+
+- Google Groups (customers / collaborators): https://groups.google.com/g/huaweihealthsyncv1y2022
+- StackOverflow Teams (developer collaboration): https://stackoverflow.com/c/healthdash
+- Keybase (development documentation & team): keybase://team/healthdash
+- Wordpress (product blog / updates): https://linardsliepins.wordpress.com/
+- Bitbucket (public bug tracker / legacy issues): https://bitbucket.org/HolimaX/sandboxandroid/issues/new
+
+These channels are used for different audiences (customers, developers, testers). For private/professional support use organization-managed channels and request access if needed.
+
+## CI / Build badges
+
+CI badges with embedded tokens were removed from the org profile to avoid exposing secrets. Reintroducing badges should use tokenless badge URLs or repository-level badges in each repo's README. If you want me to restore badges for specific repos, I will add them per-repo using safe badge URLs.
+
+## Support & Where to get help
+
+- For bugs or feature requests: open an issue in the repository that best matches the component (example: https://github.com/Healthdash/CloudDash-Backend-ReactJS-API/issues).
+- For access requests or cross-repo coordination: open an issue in this repository (https://github.com/Healthdash/.github/issues) or contact a maintainer (see list below).
+- For urgent production incidents: notify the on-call maintainer or the organization owners.
+
+## Maintainers & Access Instructions (updated)
+
+- Primary maintainer / contact: @HolimaX (Linards) — active committer and organization owner.
+- Organization owners and maintainers: see the Healthdash organization members and teams (https://github.com/Healthdash). If you need a specific point of contact for a repo, open an issue or mention @HolimaX and a repository owner will respond.
+
+How to request access or become a contributor:
+- 1) Open an issue in the relevant repository explaining why you need access and which resources (CI, Docker registry, Play Store, backend credentials) you need.
+- 2) Provide your GitHub username and the minimum required access level.
+- 3) A repository owner or org admin will respond and either invite you to the organization/team or provide alternative access.
+
+If you are an organization admin and want to add a maintainer entry here with an email or additional GitHub handles, tell me which details to include and I will update the profile.
 
 ## Compliance, standards and practices
 
@@ -47,11 +97,8 @@ CI badges and service tokens were removed from this profile to avoid exposing st
 ## Additional links
 
 - Product partners / homepage partners: https://www.healthdash.lv/partners
-
-## Glossary
-
 - SER: https://www.healthdash.lv/SER
 
 ---
 
-(Updated: 2026-09-07) — Fixed links and added current repository overview. If you want specific CI badges, status entries, or more detail (owners, contacts, or migration notes), tell me which repos to update and I'll add them.
+(Committed: 2026-09-07) — Restored distribution & communication links, described produced artifacts per repo, and added maintainers/access instructions. If you want me to include exact artifact locations (S3, Docker registry, Play Store release URLs), provide the target repo(s) and I'll add them to the appropriate repository READMEs or this profile.
