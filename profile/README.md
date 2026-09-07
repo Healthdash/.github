@@ -14,32 +14,55 @@ Updated: 2026-09-07
 ## What each repository produces (artifacts and distribution channels)
 
 - CloudDash-Frontend-ReactJS
-  - Produces: static web application build (HTML, JS, CSS, assets) packaged by the frontend build pipeline.
-  - Distributed: served from clouddashboard.healthdash.com and deployed to the production hosting environment (see repo README for deployment details).
+  - Produces: static web application build (HTML, JS, CSS, assets) and versioned release bundles.
+  - Distributed: served from https://clouddashboard.healthdash.com and associated CDN/hosting. Releases are published to GitHub Releases; CI publishes build artifacts to the release and to the deployment pipeline.
+  - Tokenless repo badges (example):
+    - [![Release](https://img.shields.io/github/v/release/Healthdash/CloudDash-Frontend-ReactJS?label=release)](https://github.com/Healthdash/CloudDash-Frontend-ReactJS/releases)
+    - [![Last commit](https://img.shields.io/github/last-commit/Healthdash/CloudDash-Frontend-ReactJS)](https://github.com/Healthdash/CloudDash-Frontend-ReactJS/commits)
+    - [![Open issues](https://img.shields.io/github/issues/Healthdash/CloudDash-Frontend-ReactJS)](https://github.com/Healthdash/CloudDash-Frontend-ReactJS/issues)
 
 - CloudDash-Backend-ReactJS-API
-  - Produces: backend service releases (Node.js artifacts) and Docker images used by staging/production.
-  - Distributed: Docker images and GitHub Releases; used by the PCD deployment pipeline.
+  - Produces: backend service releases and Docker images used by staging/production.
+  - Distributed: Docker images (internal registry), and GitHub Releases for source and artifacts. See repo README for registry coordinates.
+  - Tokenless repo badges (example):
+    - [![Release](https://img.shields.io/github/v/release/Healthdash/CloudDash-Backend-ReactJS-API?label=release)](https://github.com/Healthdash/CloudDash-Backend-ReactJS-API/releases)
+    - [![Last commit](https://img.shields.io/github/last-commit/Healthdash/CloudDash-Backend-ReactJS-API)](https://github.com/Healthdash/CloudDash-Backend-ReactJS-API/commits)
+    - [![Open issues](https://img.shields.io/github/issues/Healthdash/CloudDash-Backend-ReactJS-API)](https://github.com/Healthdash/CloudDash-Backend-ReactJS-API/issues)
 
 - CloudDash-Frontend-JavaAndroid
-  - Produces: Android application packages (APK / AAB) and release builds.
-  - Distributed: Google Play Store (public/private tracks); CI produces signed artifacts for release.
+  - Produces: Android application packages (APK / AAB) and signed release builds.
+  - Distributed: Google Play Store (public/private tracks). CI produces signed artifacts attached to releases.
+  - Tokenless repo badges (example):
+    - [![Release](https://img.shields.io/github/v/release/Healthdash/CloudDash-Frontend-JavaAndroid?label=release)](https://github.com/Healthdash/CloudDash-Frontend-JavaAndroid/releases)
+    - [![Last commit](https://img.shields.io/github/last-commit/Healthdash/CloudDash-Frontend-JavaAndroid)](https://github.com/Healthdash/CloudDash-Frontend-JavaAndroid/commits)
+    - [![Open issues](https://img.shields.io/github/issues/Healthdash/CloudDash-Frontend-JavaAndroid)](https://github.com/Healthdash/CloudDash-Frontend-JavaAndroid/issues)
 
 - CloudDash-Frontend-GoLangComponents
   - Produces: Go-based CLI tools and static binaries used in CI and admin tooling.
   - Distributed: release binaries attached to GitHub Releases and internal tooling registries.
+  - Tokenless repo badges (example):
+    - [![Release](https://img.shields.io/github/v/release/Healthdash/CloudDash-Frontend-GoLangComponents?label=release)](https://github.com/Healthdash/CloudDash-Frontend-GoLangComponents/releases)
+    - [![Last commit](https://img.shields.io/github/last-commit/Healthdash/CloudDash-Frontend-GoLangComponents)](https://github.com/Healthdash/CloudDash-Frontend-GoLangComponents/commits)
+    - [![Open issues](https://img.shields.io/github/issues/Healthdash/CloudDash-Frontend-GoLangComponents)](https://github.com/Healthdash/CloudDash-Frontend-GoLangComponents/issues)
 
 - CloudDash-Frontend-PythonComponents
   - Produces: Python/Flask microservice packages and Docker images for optional extension services (PCD apps).
   - Distributed: Docker images, PyPI/internal package registry (when applicable), and GitHub Releases.
+  - Tokenless repo badges (example):
+    - [![Release](https://img.shields.io/github/v/release/Healthdash/CloudDash-Frontend-PythonComponents?label=release)](https://github.com/Healthdash/CloudDash-Frontend-PythonComponents/releases)
+    - [![Last commit](https://img.shields.io/github/last-commit/Healthdash/CloudDash-Frontend-PythonComponents)](https://github.com/Healthdash/CloudDash-Frontend-PythonComponents/commits)
+    - [![Open issues](https://img.shields.io/github/issues/Healthdash/CloudDash-Frontend-PythonComponents)](https://github.com/Healthdash/CloudDash-Frontend-PythonComponents/issues)
 
 - android-oauth-client
   - Produces: Android library artifacts (AAR/JAR) and source releases.
-  - Distributed: Maven/Central or GitHub Releases where applicable.
+  - Distributed: Maven Central (where applicable) and GitHub Releases.
+  - Tokenless repo badges (example):
+    - [![Release](https://img.shields.io/github/v/release/Healthdash/android-oauth-client?label=release)](https://github.com/Healthdash/android-oauth-client/releases)
+    - [![Last commit](https://img.shields.io/github/last-commit/Healthdash/android-oauth-client)](https://github.com/Healthdash/android-oauth-client/commits)
+    - [![Open issues](https://img.shields.io/github/issues/Healthdash/android-oauth-client)](https://github.com/Healthdash/android-oauth-client/issues)
 
 - PizzaDelivery
   - Produces: example Android app and sample source used for demos and testing.
-  - Distributed: sample artifacts via Releases.
 
 - demo-repository
   - Produces: demo content and onboarding materials.
@@ -47,7 +70,7 @@ Updated: 2026-09-07
 - .github
   - Produces: organization-level configuration and this profile README.
 
-Note: exact artifact formats and distribution targets are maintained in each repository's README. If you need a specific artifact location (for CI, S3 bucket paths, Docker registry, or Play Store links) tell me which repo and I can add the exact URLs and access instructions.
+Note: exact artifact locations (S3 bucket paths, private Docker registry endpoints, signed APK URLs) are intentionally NOT listed here to avoid exposing sensitive infrastructure details. If you want exact internal URLs added, provide them through a secure channel and confirm they are safe to publish in this README.
 
 ## Communication & Collaboration channels (restored)
 
@@ -61,25 +84,31 @@ These channels are used for different audiences (customers, developers, testers)
 
 ## CI / Build badges
 
-CI badges with embedded tokens were removed from the org profile to avoid exposing secrets. Reintroducing badges should use tokenless badge URLs or repository-level badges in each repo's README. If you want me to restore badges for specific repos, I will add them per-repo using safe badge URLs.
+The org profile will show tokenless, repository-level badges that do not embed service tokens. Reintroducing badges with tokens is not permitted here. Repository READMEs should maintain their own current CI badges. Example tokenless badges are included above for the main repos (release, last commit, open issues). If you want consistent badge styling across repositories, I can add a short badge guideline to this profile and optionally open PRs to each repository to add the badges in their READMEs.
 
 ## Support & Where to get help
 
 - For bugs or feature requests: open an issue in the repository that best matches the component (example: https://github.com/Healthdash/CloudDash-Backend-ReactJS-API/issues).
-- For access requests or cross-repo coordination: open an issue in this repository (https://github.com/Healthdash/.github/issues) or contact a maintainer (see list below).
-- For urgent production incidents: notify the on-call maintainer or the organization owners.
+- For cross-repo coordination or access requests: open an issue in this repository (https://github.com/Healthdash/.github/issues) with the details described below.
+- For urgent production incidents: notify the on-call maintainer or organization owners via the organization incident channel.
 
 ## Maintainers & Access Instructions (updated)
 
-- Primary maintainer / contact: @HolimaX (Linards) — active committer and organization owner.
-- Organization owners and maintainers: see the Healthdash organization members and teams (https://github.com/Healthdash). If you need a specific point of contact for a repo, open an issue or mention @HolimaX and a repository owner will respond.
+Primary maintainer and organization owner:
+
+- Linards Liepi4661 — @HolimaX — Primary maintainer / org owner — contact via GitHub.
 
 How to request access or become a contributor:
-- 1) Open an issue in the relevant repository explaining why you need access and which resources (CI, Docker registry, Play Store, backend credentials) you need.
-- 2) Provide your GitHub username and the minimum required access level.
-- 3) A repository owner or org admin will respond and either invite you to the organization/team or provide alternative access.
 
-If you are an organization admin and want to add a maintainer entry here with an email or additional GitHub handles, tell me which details to include and I will update the profile.
+1) Open an issue in the relevant repository or in this repository describing:
+   - Your GitHub username
+   - The resources you need access to (e.g., repo name, CI, Docker registry, Play Store)
+   - The minimum access level required and why
+   - Any timeframe or urgency
+2) A repository owner or organization admin will respond to the issue with next steps. The typical response will either invite you to the organization/team or provide a temporary credential/process for the requested access.
+3) For long-term access, an org admin will add you to the appropriate GitHub team with documented permissions.
+
+If you are an org owner and want specific maintainer entries (GitHub handle + role + contact email) added here, provide the entries and I will update this profile.
 
 ## Compliance, standards and practices
 
@@ -101,4 +130,4 @@ If you are an organization admin and want to add a maintainer entry here with an
 
 ---
 
-(Committed: 2026-09-07) — Restored distribution & communication links, described produced artifacts per repo, and added maintainers/access instructions. If you want me to include exact artifact locations (S3, Docker registry, Play Store release URLs), provide the target repo(s) and I'll add them to the appropriate repository READMEs or this profile.
+(Committed: 2026-09-07) — Restored distribution & communication links, described produced artifacts per repo (CloudDash first), reintroduced tokenless repo-level badges, and added maintainers/access instructions.
