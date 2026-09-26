@@ -109,7 +109,9 @@ If you are an org owner and want specific maintainer entries (GitHub handle + ro
 ## Additional links
 
 - Product partners / homepage partners: https://www.healthdash.lv/partners
-- SER: https://www.healthdash.lv/SER
+- SER (FAQ resopurce for CD/PCD users): https://www.healthdash.lv/SER
+- Public Bug Tracker (Legacy, till Aug 20 2026): https://bitbucket.org/HolimaX/sandboxandroid/issues/new
+- Public Bug Tracker: JIRA CLoud
 
 ---
 
