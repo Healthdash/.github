@@ -175,3 +175,4 @@ This master consolidation document tracks all duplicate or near-duplicate crash 
 
 ## Latest Updates
 - **2026-09-26T07:51:54Z:** New issue #52 detected for crash type: androidx.startup.StartupException.<init> (0.3.5-alphaPro)
+- **2026-09-26T07:52:05Z:** New issue #43 detected for crash type: com.firebase.ui.auth.ui.AppCompatBase.onCreate (0.4.0-alpha)
