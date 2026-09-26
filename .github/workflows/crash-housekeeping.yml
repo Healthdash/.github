@@ -9,6 +9,11 @@ on:
         description: 'Issue number to check (optional: scans all if empty)'
         required: false
 
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
 env:
   MASTER_ISSUE: 53
   CRASHLYTICS_LABEL: 'crashlytics-healthsyncandroidapp'
@@ -20,7 +25,7 @@ jobs:
   # 1. BULK SCAN MODE (workflow_dispatch WITHOUT issue_number)
   ###########################################################################
   bulk-scan:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.issue_number == ''
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.issue_number == '' || github.event.inputs.issue_number == null)
     runs-on: ubuntu-latest
 
     steps:
@@ -32,7 +37,7 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          const issues = await github.rest.issues.listForRepo({
+          const issues = await github.paginate(github.rest.issues.listForRepo, {
             owner: context.repo.owner,
             repo: context.repo.repo,
             labels: process.env.CRASHLYTICS_LABEL,
@@ -40,15 +45,21 @@ jobs:
             per_page: 100
           });
 
-          const fs = require('fs');
-          fs.writeFileSync('issues.json', JSON.stringify(issues.data, null, 2));
+          // Filter out pull requests and the master issue itself
+          const masterIssueNum = parseInt(process.env.MASTER_ISSUE, 10);
+          const crashIssues = issues.filter(issue => !issue.pull_request && issue.number !== masterIssueNum);
 
-          core.info(`Saved ${issues.data.length} issues to issues.json`);
+          const fs = require('fs');
+          fs.writeFileSync('issues.json', JSON.stringify(crashIssues, null, 2));
+
+          core.info(`Saved ${crashIssues.length} issues to issues.json`);
 
     - name: Split issues into batch files
       run: |
-        mkdir batches
-        jq -c '.[]' issues.json | split -l 20 - batches/batch_
+        mkdir -p batches
+        if [ -s issues.json ] && [ "$(jq 'length' issues.json)" -gt 0 ]; then
+          jq -c '.[]' issues.json | split -l 20 - batches/batch_
+        fi
 
     - name: Process each batch file
       uses: actions/github-script@v7
@@ -58,11 +69,21 @@ jobs:
           const path = require('path');
 
           const BATCH_DIR = 'batches';
+          if (!fs.existsSync(BATCH_DIR)) {
+            core.info('No batches directory found. Skipping.');
+            return;
+          }
           const files = fs.readdirSync(BATCH_DIR);
+          if (files.length === 0) {
+            core.info('No batch files found. Skipping.');
+            return;
+          }
 
           async function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
           }
+
+          const targetRef = context.ref ? context.ref.replace(/^refs\/heads\//, '') : 'master';
 
           async function safeDispatch(issueNumber) {
             let attempt = 0;
@@ -74,7 +95,7 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   workflow_id: "crash-housekeeping.yml",
-                  ref: "main",
+                  ref: targetRef,
                   inputs: { issue_number: issueNumber.toString() }
                 });
 
@@ -94,7 +115,9 @@ jobs:
 
           for (const file of files) {
             const batchPath = path.join(BATCH_DIR, file);
-            const lines = fs.readFileSync(batchPath, 'utf8').trim().split('\n');
+            const content = fs.readFileSync(batchPath, 'utf8').trim();
+            if (!content) continue;
+            const lines = content.split('\n').filter(Boolean);
 
             core.info(`Processing batch file: ${file} (${lines.length} issues)`);
 
@@ -118,7 +141,7 @@ jobs:
   # 2. SINGLE ISSUE MODE (issues event OR workflow_dispatch WITH issue_number)
   ###########################################################################
   single-issue:
-    if: github.event_name == 'issues' || github.event.inputs.issue_number != ''
+    if: github.event_name == 'issues' || (github.event.inputs.issue_number != '' && github.event.inputs.issue_number != null)
     runs-on: ubuntu-latest
 
     steps:
@@ -134,7 +157,7 @@ jobs:
           script: |
             const issueNumber =
               context.payload.issue?.number ||
-              process.env.INPUT_ISSUE_NUMBER;
+              (process.env.INPUT_ISSUE_NUMBER ? parseInt(process.env.INPUT_ISSUE_NUMBER, 10) : null);
 
             if (!issueNumber) {
               core.setFailed('No issue number found (single-issue mode)');
@@ -143,11 +166,6 @@ jobs:
 
             core.setOutput('issue_number', issueNumber.toString());
 
-      #######################################################################
-      # The rest of your existing logic goes here unchanged
-      # BUT using steps.resolve.outputs.issue_number instead of raw expressions
-      #######################################################################
-
       - name: Get issue details
         id: new_issue
         env:
@@ -155,7 +173,15 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const issueNumber = parseInt(process.env.ISSUE_NUMBER);
+            const issueNumber = parseInt(process.env.ISSUE_NUMBER, 10);
+            const masterIssueNum = parseInt(process.env.MASTER_ISSUE, 10);
+
+            if (issueNumber === masterIssueNum) {
+              core.info(`Issue #${issueNumber} is the master tracking issue. Skipping.`);
+              core.setOutput('is_crashlytics', 'false');
+              core.setOutput('issue_number', issueNumber.toString());
+              return;
+            }
 
             const issue = await github.rest.issues.get({
               owner: context.repo.owner,
@@ -163,15 +189,295 @@ jobs:
               issue_number: issueNumber
             });
 
-            const hasLabel = issue.data.labels.some(
-              l => l.name === process.env.CRASHLYTICS_LABEL
+            if (issue.data.state === 'closed') {
+              core.info(`Issue #${issueNumber} is already closed. Skipping.`);
+              core.setOutput('is_crashlytics', 'false');
+              core.setOutput('issue_number', issueNumber.toString());
+              return;
+            }
+
+            const hasLabel = (issue.data.labels || []).some(
+              l => (typeof l === 'string' ? l : l.name) === process.env.CRASHLYTICS_LABEL
             );
 
-            core.setOutput('title', issue.data.title);
-            core.setOutput('body', issue.data.body);
+            core.setOutput('title', issue.data.title || '');
+            core.setOutput('body', issue.data.body || '');
             core.setOutput('is_crashlytics', hasLabel ? 'true' : 'false');
             core.setOutput('issue_number', issueNumber.toString());
 
-      # ... your remaining steps (extract crash info, check duplicates, update master issue, etc.)
-      # They stay exactly the same except they use env variables instead of `${{ }}` inside JS.
+      - name: Extract crash information
+        id: extract_crash
+        if: steps.new_issue.outputs.is_crashlytics == 'true'
+        env:
+          ISSUE_BODY: ${{ steps.new_issue.outputs.body }}
+          ISSUE_TITLE: ${{ steps.new_issue.outputs.title }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = process.env.ISSUE_BODY || '';
+            const title = process.env.ISSUE_TITLE || '';
 
+            const crashType = title.replace(/\[.*?\]/g, '').trim();
+
+            const versionMatch = body.match(/appVersion\s*\|\s*([^|\s\n]+)/i);
+            const appVersion = versionMatch ? versionMatch[1].trim() : 'unknown';
+
+            const appIdMatch = body.match(/appId\s*\|\s*([^|\s\n]+)/i);
+            const appId = appIdMatch ? appIdMatch[1].trim() : 'unknown';
+
+            const crashIdMatch = body.match(/(?:^|[\s|])id\s*\|\s*([a-f0-9]+)/i);
+            const crashId = crashIdMatch ? crashIdMatch[1].trim() : 'unknown';
+
+            core.setOutput('crash_type', crashType);
+            core.setOutput('app_version', appVersion);
+            core.setOutput('app_id', appId);
+            core.setOutput('crash_id', crashId);
+
+            core.info(`Crash Type: ${crashType}`);
+            core.info(`App Version: ${appVersion}`);
+            core.info(`App ID: ${appId}`);
+            core.info(`Crash ID: ${crashId}`);
+
+      - name: Check for duplicates in master issue
+        id: check_duplicates
+        if: steps.new_issue.outputs.is_crashlytics == 'true'
+        env:
+          NEW_CRASH_TYPE: ${{ steps.extract_crash.outputs.crash_type }}
+          NEW_APP_VERSION: ${{ steps.extract_crash.outputs.app_version }}
+          NEW_CRASH_ID: ${{ steps.extract_crash.outputs.crash_id }}
+          NEW_ISSUE_NUM: ${{ steps.new_issue.outputs.issue_number }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const masterIssueNum = parseInt(process.env.MASTER_ISSUE, 10);
+            const newCrashType = process.env.NEW_CRASH_TYPE;
+            const newAppVersion = process.env.NEW_APP_VERSION;
+            const newCrashId = process.env.NEW_CRASH_ID;
+            const newIssueNum = parseInt(process.env.NEW_ISSUE_NUM, 10);
+
+            // 1. Check local consolidation report file for primary issue of this crash type
+            let primaryFromReport = null;
+            const reportFile = process.env.REPORT_FILE;
+            if (fs.existsSync(reportFile)) {
+              const reportContent = fs.readFileSync(reportFile, 'utf8');
+              const escapedCrashType = newCrashType.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const regex = new RegExp(`##\\s+.*${escapedCrashType}[\\s\\S]*?\\*\\*Primary Issue:\\*\\*\\s*\\[#(\\d+)\\]`, 'i');
+              const match = reportContent.match(regex);
+              if (match) {
+                primaryFromReport = parseInt(match[1], 10);
+                core.info(`Found primary issue #${primaryFromReport} for "${newCrashType}" in ${reportFile}`);
+              }
+            }
+
+            // 2. Fetch master tracking issue if possible
+            let masterBody = '';
+            try {
+              const masterIssue = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: masterIssueNum
+              });
+              masterBody = masterIssue.data.body || '';
+            } catch (err) {
+              core.warning(`Could not fetch master issue #${masterIssueNum}: ${err.message}`);
+            }
+
+            const crashTypeExists = (masterBody && masterBody.includes(newCrashType)) || primaryFromReport !== null;
+
+            // 3. Find related issues by crash type or crash ID from open issues
+            let duplicateIssue = null;
+            if (primaryFromReport && primaryFromReport !== newIssueNum) {
+              duplicateIssue = primaryFromReport;
+            }
+
+            const issuesResponse = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: process.env.CRASHLYTICS_LABEL,
+              state: 'open',
+              per_page: 100
+            });
+
+            let relatedIssues = [];
+            for (const issue of issuesResponse) {
+              if (issue.pull_request) continue;
+              if (issue.number === newIssueNum) continue;
+              if (issue.number === masterIssueNum) continue;
+
+              const issueBody = issue.body || '';
+              const issueCrashType = (issue.title || '').replace(/\[.*?\]/g, '').trim();
+
+              if (issueCrashType === newCrashType) {
+                relatedIssues.push(issue.number);
+
+                // Exact crash ID match
+                if (!duplicateIssue && newCrashId && newCrashId !== 'unknown' && issueBody.includes(newCrashId)) {
+                  duplicateIssue = issue.number;
+                }
+              }
+            }
+
+            core.setOutput('crash_type_exists', crashTypeExists ? 'true' : 'false');
+            core.setOutput('duplicate_issue', duplicateIssue ? duplicateIssue.toString() : 'none');
+            core.setOutput('related_issues', JSON.stringify(relatedIssues));
+
+            core.info(`Crash Type: ${newCrashType}`);
+            core.info(`App Version: ${newAppVersion}`);
+            core.info(`Crash ID: ${newCrashId}`);
+            core.info(`Crash Type Exists: ${crashTypeExists}`);
+            core.info(`Duplicate Found: ${duplicateIssue || 'none'}`);
+            core.info(`Related Issues: ${relatedIssues.join(', ')}`);
+
+      - name: Close duplicate issue
+        if: steps.check_duplicates.outputs.duplicate_issue != 'none' && steps.new_issue.outputs.is_crashlytics == 'true'
+        env:
+          NEW_ISSUE_NUM: ${{ steps.new_issue.outputs.issue_number }}
+          DUPLICATE_NUM: ${{ steps.check_duplicates.outputs.duplicate_issue }}
+          CRASH_TYPE: ${{ steps.extract_crash.outputs.crash_type }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const newIssueNum = parseInt(process.env.NEW_ISSUE_NUM, 10);
+            const duplicateNum = parseInt(process.env.DUPLICATE_NUM, 10);
+            const crashType = process.env.CRASH_TYPE;
+            const masterIssue = process.env.MASTER_ISSUE;
+
+            // Add duplicate label
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: newIssueNum,
+                labels: ['duplicate']
+              });
+            } catch (err) {
+              core.warning(`Failed to add duplicate label: ${err.message}`);
+            }
+
+            // Comment on new issue
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: newIssueNum,
+              body: `🔍 **Duplicate Detected**\n\nThis issue is a duplicate of #${duplicateNum}. The primary issue contains the latest investigation and status for this crash type: **${crashType}**.\n\nPlease refer to #${duplicateNum} and the [Master Tracker #${masterIssue}](https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${masterIssue}) for consolidated tracking.\n\n---\n*This comment was auto-generated by the Crash Issue Housekeeping workflow.*`
+            });
+
+            // Close the new issue
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: newIssueNum,
+              state: 'closed',
+              state_reason: 'not_planned'
+            });
+
+            core.info(`Closed issue #${newIssueNum} as duplicate of #${duplicateNum}`);
+
+      - name: Update master issue
+        if: steps.new_issue.outputs.is_crashlytics == 'true'
+        env:
+          NEW_ISSUE_NUM: ${{ steps.new_issue.outputs.issue_number }}
+          CRASH_TYPE: ${{ steps.extract_crash.outputs.crash_type }}
+          APP_VERSION: ${{ steps.extract_crash.outputs.app_version }}
+          DUPLICATE_ISSUE: ${{ steps.check_duplicates.outputs.duplicate_issue }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const masterIssueNum = parseInt(process.env.MASTER_ISSUE, 10);
+            const newIssueNum = parseInt(process.env.NEW_ISSUE_NUM, 10);
+            const crashType = process.env.CRASH_TYPE;
+            const appVersion = process.env.APP_VERSION;
+            const duplicateIssue = process.env.DUPLICATE_ISSUE;
+            const isDuplicate = duplicateIssue && duplicateIssue !== 'none';
+
+            let comment = '';
+
+            if (isDuplicate) {
+              comment = `🔄 **Issue Auto-Closed as Duplicate**\n\n- **New Issue:** #${newIssueNum}\n- **Crash Type:** ${crashType}\n- **App Version:** ${appVersion}\n- **Duplicate of:** #${duplicateIssue}\n- **Status:** Closed and consolidated\n\nThe duplicate has been closed with appropriate references to the primary issue.\n\n*Auto-processed on ${new Date().toISOString()}*`;
+            } else {
+              comment = `✨ **New Crash Issue Detected**\n\n- **Issue:** #${newIssueNum}\n- **Crash Type:** ${crashType}\n- **App Version:** ${appVersion}\n- **Status:** New (investigate for duplicates)\n\nPlease verify if this should be added as a new primary issue or consolidated with an existing group.\n\n*Detected on ${new Date().toISOString()}*`;
+            }
+
+            try {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: masterIssueNum,
+                body: comment
+              });
+              core.info(`Updated master issue #${masterIssueNum} with new activity`);
+            } catch (err) {
+              core.warning(`Failed to update master issue #${masterIssueNum}: ${err.message}`);
+            }
+
+      - name: Update consolidation report
+        if: steps.new_issue.outputs.is_crashlytics == 'true' && steps.check_duplicates.outputs.duplicate_issue == 'none'
+        env:
+          CRASH_TYPE: ${{ steps.extract_crash.outputs.crash_type }}
+          APP_VERSION: ${{ steps.extract_crash.outputs.app_version }}
+          APP_ID: ${{ steps.extract_crash.outputs.app_id }}
+          NEW_ISSUE_NUM: ${{ steps.new_issue.outputs.issue_number }}
+        run: |
+          if [ -f "${{ env.REPORT_FILE }}" ]; then
+            TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+            if ! grep -q "## Latest Updates" "${{ env.REPORT_FILE }}"; then
+              echo "" >> "${{ env.REPORT_FILE }}"
+              echo "## Latest Updates" >> "${{ env.REPORT_FILE }}"
+            fi
+
+            echo "- **${TIMESTAMP}:** New issue #${NEW_ISSUE_NUM} detected for crash type: ${CRASH_TYPE} (${APP_VERSION})" >> "${{ env.REPORT_FILE }}"
+          fi
+
+      - name: Commit report changes
+        if: steps.new_issue.outputs.is_crashlytics == 'true' && steps.check_duplicates.outputs.duplicate_issue == 'none'
+        env:
+          NEW_ISSUE_NUM: ${{ steps.new_issue.outputs.issue_number }}
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          if [ -n "$(git status --porcelain "${{ env.REPORT_FILE }}")" ]; then
+            git add "${{ env.REPORT_FILE }}"
+            git commit -m "chore: update crash consolidation report with new issue #${NEW_ISSUE_NUM}"
+            git push origin HEAD
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Create summary
+        if: always()
+        env:
+          IS_CRASHLYTICS: ${{ steps.new_issue.outputs.is_crashlytics }}
+          DUPLICATE_ISSUE: ${{ steps.check_duplicates.outputs.duplicate_issue }}
+          CRASH_TYPE: ${{ steps.extract_crash.outputs.crash_type }}
+          APP_VERSION: ${{ steps.extract_crash.outputs.app_version }}
+          ISSUE_NUMBER: ${{ steps.new_issue.outputs.issue_number }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const isCrashlytics = process.env.IS_CRASHLYTICS === 'true';
+
+            if (!isCrashlytics) {
+              core.notice('Issue does not have crashlytics label, skipping');
+              return;
+            }
+
+            const issueNumber = process.env.ISSUE_NUMBER;
+            const duplicateIssue = process.env.DUPLICATE_ISSUE;
+            const isDuplicate = duplicateIssue && duplicateIssue !== 'none';
+            const crashType = process.env.CRASH_TYPE || 'unknown';
+            const appVersion = process.env.APP_VERSION || 'unknown';
+
+            let summary = `## Crash Issue Housekeeping Summary\n\n`;
+            summary += `- **Issue:** #${issueNumber}\n`;
+            summary += `- **Crash Type:** ${crashType}\n`;
+            summary += `- **App Version:** ${appVersion}\n`;
+            summary += `- **Status:** ${isDuplicate ? '✅ Closed as Duplicate' : '⚠️ New Issue'}\n`;
+
+            if (isDuplicate) {
+              summary += `- **Primary Issue:** #${duplicateIssue}\n`;
+            }
+
+            core.summary.addRaw(summary);
