@@ -181,3 +181,4 @@ This master consolidation document tracks all duplicate or near-duplicate crash 
 - **2026-09-26T07:53:03Z:** New issue #4 detected for crash type: com.linardsl.libhacontimig.SyncActivity.parseHTTPResponse (0.3.4-final)
 - **2026-09-29T10:59:01Z:** New issue #60 detected for crash type: com.linardsl.libhacontimig.helpers.AndroidSystemHelperFunctions.getMockInterface (0.4.0-betaPro)
 - **2026-10-02T11:31:17Z:** New issue #62 detected for crash type: Native method - android.os.MessageQueue.nativePollOnce (0.4.0-betaPro)
+- **2026-10-02T11:42:54Z:** New issue #65 detected for crash type: com.google.android.play:hsdp@@2.0.1 - com.google.android.play.core.hsdp.service.HsdpShimActivity.zzd (0.4.0-betaPro)
