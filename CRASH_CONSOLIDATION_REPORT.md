@@ -180,3 +180,4 @@ This master consolidation document tracks all duplicate or near-duplicate crash 
 - **2026-09-26T07:52:50Z:** New issue #17 detected for crash type: com.google.firebase.remoteconfig.internal.ConfigFetchHttpClient.fetch (0.3.5-final)
 - **2026-09-26T07:53:03Z:** New issue #4 detected for crash type: com.linardsl.libhacontimig.SyncActivity.parseHTTPResponse (0.3.4-final)
 - **2026-09-29T10:59:01Z:** New issue #60 detected for crash type: com.linardsl.libhacontimig.helpers.AndroidSystemHelperFunctions.getMockInterface (0.4.0-betaPro)
+- **2026-10-02T11:31:17Z:** New issue #62 detected for crash type: Native method - android.os.MessageQueue.nativePollOnce (0.4.0-betaPro)
