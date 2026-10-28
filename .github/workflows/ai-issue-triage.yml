@@ -19,6 +19,7 @@ jobs:
       !contains(github.event.issue.labels.*.name, 'priority-critical')
     runs-on: ubuntu-latest
 
+    steps:
     - name: Classify issue with GitHub Models
       id: classify
       uses: actions/github-script@v7
@@ -118,80 +119,80 @@ jobs:
             core.setOutput('needs_info', 'false');
           }
 
-      - name: Apply labels and add a triage comment
-        uses: actions/github-script@v7
-        env:
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          LABELS_JSON: ${{ steps.classify.outputs.labels }}
-          SUMMARY: ${{ steps.classify.outputs.summary }}
-          PRIORITY: ${{ steps.classify.outputs.priority }}
-          NEEDS_INFO: ${{ steps.classify.outputs.needs_info }}
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const issueNumber = Number(process.env.ISSUE_NUMBER);
-            const labels = JSON.parse(process.env.LABELS_JSON || '["triage"]');
-            const priority = (process.env.PRIORITY || 'medium').toLowerCase();
-            const summary = process.env.SUMMARY || 'Issue was automatically triaged.';
-            const needsInfo = process.env.NEEDS_INFO === 'true';
-
-            const allLabels = [...new Set([
-              ...labels,
-              'triage',
-              `priority-${priority}`
-            ])];
-
-            if (needsInfo) {
-              allLabels.push('needs-info');
-            }
-
-            for (const label of allLabels) {
-              try {
-                await github.rest.issues.getLabel({ owner, repo, name: label });
-              } catch (error) {
-                if (error.status === 404) {
-                  const colors = {
-                    triage: '0075ca',
-                    bug: 'd73a4a',
-                    enhancement: 'a2eeef',
-                    question: 'd876e3',
-                    documentation: '0075ca',
-                    security: 'b60205',
-                    duplicate: 'cfd3d7',
-                    'good-first-issue': '7057ff',
-                    'needs-info': 'fbca04',
-                    'priority-low': '0e8a16',
-                    'priority-medium': 'fbca04',
-                    'priority-high': 'd93f0b',
-                    'priority-critical': 'b60205'
-                  };
-
-                  await github.rest.issues.createLabel({
-                    owner,
-                    repo,
-                    name: label,
-                    color: colors[label] || 'ededed'
-                  });
-                } else {
-                  throw error;
+          - name: Apply labels and add a triage comment
+            uses: actions/github-script@v7
+            env:
+              ISSUE_NUMBER: ${{ github.event.issue.number }}
+              LABELS_JSON: ${{ steps.classify.outputs.labels }}
+              SUMMARY: ${{ steps.classify.outputs.summary }}
+              PRIORITY: ${{ steps.classify.outputs.priority }}
+              NEEDS_INFO: ${{ steps.classify.outputs.needs_info }}
+            with:
+              script: |
+                const { owner, repo } = context.repo;
+                const issueNumber = Number(process.env.ISSUE_NUMBER);
+                const labels = JSON.parse(process.env.LABELS_JSON || '["triage"]');
+                const priority = (process.env.PRIORITY || 'medium').toLowerCase();
+                const summary = process.env.SUMMARY || 'Issue was automatically triaged.';
+                const needsInfo = process.env.NEEDS_INFO === 'true';
+      
+                const allLabels = [...new Set([
+                  ...labels,
+                  'triage',
+                  `priority-${priority}`
+                ])];
+      
+                if (needsInfo) {
+                  allLabels.push('needs-info');
                 }
-              }
-            }
-
-            await github.rest.issues.addLabels({
-              owner,
-              repo,
-              issue_number: issueNumber,
-              labels: allLabels
-            });
-
-            const needsInfoText = needsInfo
-              ? '\n\nThis issue is missing important details. Please add those details and a maintainer will continue the triage.'
-              : '';
-
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number: issueNumber,
-              body: `## AI triage\n\n- Priority: ${priority}\n- Labels: ${allLabels.join(', ')}\n\n${summary}${needsInfoText}`
-            });
+      
+                for (const label of allLabels) {
+                  try {
+                    await github.rest.issues.getLabel({ owner, repo, name: label });
+                  } catch (error) {
+                    if (error.status === 404) {
+                      const colors = {
+                        triage: '0075ca',
+                        bug: 'd73a4a',
+                        enhancement: 'a2eeef',
+                        question: 'd876e3',
+                        documentation: '0075ca',
+                        security: 'b60205',
+                        duplicate: 'cfd3d7',
+                        'good-first-issue': '7057ff',
+                        'needs-info': 'fbca04',
+                        'priority-low': '0e8a16',
+                        'priority-medium': 'fbca04',
+                        'priority-high': 'd93f0b',
+                        'priority-critical': 'b60205'
+                      };
+      
+                      await github.rest.issues.createLabel({
+                        owner,
+                        repo,
+                        name: label,
+                        color: colors[label] || 'ededed'
+                      });
+                    } else {
+                      throw error;
+                    }
+                  }
+                }
+      
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  labels: allLabels
+                });
+      
+                const needsInfoText = needsInfo
+                  ? '\n\nThis issue is missing important details. Please add those details and a maintainer will continue the triage.'
+                  : '';
+      
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body: `## AI triage\n\n- Priority: ${priority}\n- Labels: ${allLabels.join(', ')}\n\n${summary}${needsInfoText}`
+                });
